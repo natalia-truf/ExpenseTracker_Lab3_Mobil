@@ -9,7 +9,6 @@
         android:columnCount="2"
         android:padding="16dp">
 
-        <!-- Заголовок -->
         <TextView
             android:layout_columnSpan="2"
             android:text="@string/title"
@@ -17,7 +16,6 @@
             android:textStyle="bold"
             android:paddingBottom="16dp" />
 
-        <!-- Название покупки -->
         <TextView
             android:text="@string/label_name"
             android:textSize="16sp"
@@ -30,7 +28,6 @@
             android:layout_gravity="fill"
             android:padding="8dp" />
 
-        <!-- Сумма -->
         <TextView
             android:text="@string/label_amount"
             android:textSize="16sp"
@@ -43,7 +40,6 @@
             android:layout_gravity="fill"
             android:padding="8dp" />
 
-        <!-- Способ оплаты -->
         <TextView
             android:layout_columnSpan="2"
             android:text="@string/label_payment"
@@ -57,16 +53,19 @@
 
             <RadioButton
                 android:id="@+id/rbCash"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="@string/rb_cash"
                 android:checked="true" />
 
             <RadioButton
                 android:id="@+id/rbCard"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="@string/rb_card" />
 
         </RadioGroup>
 
-        <!-- Кнопки -->
         <Button
             android:id="@+id/btnAdd"
             android:layout_columnSpan="2"
@@ -81,7 +80,6 @@
             android:text="@string/btn_clear"
             android:layout_marginTop="8dp" />
 
-        <!-- Итоговая сумма -->
         <TextView
             android:id="@+id/tvTotal"
             android:layout_columnSpan="2"
@@ -91,7 +89,6 @@
             android:gravity="center"
             android:paddingTop="16dp" />
 
-        <!-- Заголовок списка -->
         <TextView
             android:layout_columnSpan="2"
             android:text="@string/label_list_title"
@@ -99,7 +96,6 @@
             android:textStyle="bold"
             android:paddingTop="16dp" />
 
-        <!-- Список расходов -->
         <TextView
             android:id="@+id/tvList"
             android:layout_columnSpan="2"
