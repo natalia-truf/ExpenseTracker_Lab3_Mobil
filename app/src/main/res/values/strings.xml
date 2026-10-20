@@ -5,25 +5,34 @@
     <string name="label_name">Название:</string>
     <string name="label_amount">Сумма:</string>
     <string name="label_payment">Способ оплаты:</string>
-
     <string name="hint_name">Например: Хлеб</string>
     <string name="hint_amount">100</string>
-
     <string name="rb_cash">Наличные</string>
     <string name="rb_card">Карта</string>
-
     <string name="btn_add">Добавить расход</string>
     <string name="btn_clear">Очистить всё</string>
-
     <string name="total_zero">Итого: 0.00 руб.</string>
     <string name="total_format">Итого: %1$.2f руб.</string>
-
     <string name="label_list_title">Список расходов:</string>
     <string name="list_empty">Пока ничего не добавлено</string>
-
     <string name="error_name">Введите название покупки</string>
     <string name="error_amount">Введите сумму</string>
     <string name="error_amount_positive">Сумма должна быть больше 0</string>
-
     <string name="added_format">Добавлено: %1$s — %2$.2f руб. (%3$s)</string>
+
+    <string name="menu_main">Главная</string>
+    <string name="menu_statistics">Статистика</string>
+    <string name="drawer_open">Открыть меню</string>
+    <string name="drawer_close">Закрыть меню</string>
+
+    <string name="stats_title">Статистика расходов</string>
+    <string name="stats_total">Общая сумма расходов:</string>
+    <string name="stats_count">Количество покупок:</string>
+
+    <string name="budget_title">Лимит бюджета (руб.):</string>
+    <string name="budget_hint">Введите лимит</string>
+    <string name="budget_save">Сохранить лимит</string>
+    <string name="budget_saved">Лимит сохранён: %1$.2f руб.</string>
+    <string name="budget_error">Введите корректный лимит</string>
+    <string name="budget_current">Текущий лимит: %1$.2f руб.</string>
 </resources>
