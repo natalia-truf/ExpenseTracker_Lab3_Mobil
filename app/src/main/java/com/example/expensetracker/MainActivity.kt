@@ -87,6 +87,7 @@ class MainActivity : AppCompatActivity() {
         intent.putExtra("EXTRA_TOTAL", total)
         intent.putExtra("EXTRA_COUNT", expenses.size)
         intent.putExtra("EXTRA_BUDGET", budget)
+        @Suppress("DEPRECATION")
         startActivityForResult(intent, REQUEST_STATS)
     }
 
