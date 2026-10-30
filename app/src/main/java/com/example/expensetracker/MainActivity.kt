@@ -2,36 +2,43 @@ package com.example.expensetracker
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.ContextMenu
 import android.view.MenuItem
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.navigation.NavigationView
 
 class MainActivity : AppCompatActivity() {
-
     private lateinit var etName: EditText
     private lateinit var etAmount: EditText
     private lateinit var rgPayment: RadioGroup
     private lateinit var tvTotal: TextView
-    private lateinit var tvList: TextView
     private lateinit var tvBudget: TextView
     private lateinit var btnAdd: Button
     private lateinit var btnClear: Button
-
-    private val expenses = mutableListOf<Expense>()
-    private var total: Double = 0.0
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var navigationView: NavigationView
     private var budget: Double = 0.0
     private val REQUEST_STATS = 100
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var adapter: ExpenseAdapter
+    private lateinit var emptySpaceListener: FrameLayout
+    private var selectedPosition: Int = -1
+    private val expenses = mutableListOf<Expense>()
+    private var total: Double = 0.0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,6 +46,7 @@ class MainActivity : AppCompatActivity() {
 
         initViews()
         setupDrawer()
+        setupRecyclerView()
 
         btnAdd.setOnClickListener { addExpense() }
         btnClear.setOnClickListener { clearAll() }
@@ -49,33 +57,169 @@ class MainActivity : AppCompatActivity() {
         etAmount = findViewById(R.id.etAmount)
         rgPayment = findViewById(R.id.rgPayment)
         tvTotal = findViewById(R.id.tvTotal)
-        tvList = findViewById(R.id.tvList)
         tvBudget = findViewById(R.id.tvBudget)
         btnAdd = findViewById(R.id.btnAdd)
         btnClear = findViewById(R.id.btnClear)
         drawerLayout = findViewById(R.id.drawerLayout)
         navigationView = findViewById(R.id.navigationView)
+        recyclerView = findViewById(R.id.recyclerView)
+        emptySpaceListener = findViewById(R.id.emptySpaceListener)
     }
 
+    private fun setupRecyclerView() {
+        adapter = ExpenseAdapter(expenses) { position, view ->
+            selectedPosition = position
+            view.showContextMenu()
+        }
+
+        recyclerView.layoutManager = GridLayoutManager(this, 2)
+        recyclerView.adapter = adapter
+
+        registerForContextMenu(recyclerView)
+
+        registerForContextMenu(emptySpaceListener)
+        emptySpaceListener.setOnLongClickListener { view ->
+            selectedPosition = -1
+            view.showContextMenu()
+            true
+        }
+    }
+
+    override fun onCreateContextMenu(
+        menu: ContextMenu?,
+        v: View?,
+        menuInfo: ContextMenu.ContextMenuInfo?
+    ) {
+        super.onCreateContextMenu(menu, v, menuInfo)
+        menuInflater.inflate(R.menu.menu_item_context, menu)
+    }
+
+    override fun onContextItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.action_add -> {
+                showAddDialog()
+                return true
+            }
+            R.id.action_edit -> {
+                if (selectedPosition != -1 && selectedPosition < expenses.size) {
+                    showEditDialog(selectedPosition)
+                } else {
+                    Toast.makeText(this, "Выберите карточку для редактирования", Toast.LENGTH_SHORT).show()
+                }
+                return true
+            }
+            R.id.action_delete -> {
+                if (selectedPosition != -1 && selectedPosition < expenses.size) {
+                    deleteExpense(selectedPosition)
+                } else {
+                    Toast.makeText(this, "Выберите карточку для удаления", Toast.LENGTH_SHORT).show()
+                }
+                return true
+            }
+        }
+        return super.onContextItemSelected(item)
+    }
+
+    private fun showAddDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_add_expense, null)
+        val etNameDialog = dialogView.findViewById<EditText>(R.id.etDialogName)
+        val etAmountDialog = dialogView.findViewById<EditText>(R.id.etDialogAmount)
+        val rgPaymentDialog = dialogView.findViewById<RadioGroup>(R.id.rgDialogPayment)
+
+        AlertDialog.Builder(this)
+            .setTitle("Новый расход")
+            .setView(dialogView)
+            .setPositiveButton("Добавить") { _, _ ->
+                val name = etNameDialog.text.toString().trim()
+                val amountStr = etAmountDialog.text.toString().trim()
+                val amount = amountStr.toDoubleOrNull()
+
+                if (name.isNotEmpty() && amount != null && amount > 0) {
+                    val checkedId = rgPaymentDialog.checkedRadioButtonId
+                    val rb = dialogView.findViewById<RadioButton>(checkedId)
+                    val payment = rb.text.toString()
+
+                    expenses.add(Expense(name, amount, payment))
+                    total += amount
+                    updateTotal()
+                    adapter.notifyDataSetChanged()
+                    updateBudgetDisplay()
+                }
+                else {
+                    Toast.makeText(this, "Заполните поля корректно", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
+    }
+
+    private fun showEditDialog(position: Int) {
+        val expense = expenses[position]
+        val dialogView = layoutInflater.inflate(R.layout.dialog_add_expense, null)
+        val etNameDialog = dialogView.findViewById<EditText>(R.id.etDialogName)
+        val etAmountDialog = dialogView.findViewById<EditText>(R.id.etDialogAmount)
+        val rgPaymentDialog = dialogView.findViewById<RadioGroup>(R.id.rgDialogPayment)
+
+        etNameDialog.setText(expense.name)
+        etAmountDialog.setText(expense.amount.toString())
+        if (expense.payment == "Карта") {
+            rgPaymentDialog.check(R.id.rbDialogCard)
+        } else {
+            rgPaymentDialog.check(R.id.rbDialogCash)
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("Редактировать расход")
+            .setView(dialogView)
+            .setPositiveButton("Сохранить") { _, _ ->
+                val newName = etNameDialog.text.toString().trim()
+                val newAmountStr = etAmountDialog.text.toString().trim()
+                val newAmount = newAmountStr.toDoubleOrNull()
+
+                if (newName.isNotEmpty() && newAmount != null && newAmount > 0) {
+                    val checkedId = rgPaymentDialog.checkedRadioButtonId
+                    val rb = dialogView.findViewById<RadioButton>(checkedId)
+                    val newPayment = rb.text.toString()
+
+                    total = total - expense.amount + newAmount
+                    expenses[position] = Expense(newName, newAmount, newPayment)
+                    adapter.notifyDataSetChanged()
+                    updateTotal()
+                    updateBudgetDisplay()
+                }
+                else {
+                    Toast.makeText(this, "Заполните поля корректно", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
+    }
+
+    private fun deleteExpense(position: Int) {
+        val expense = expenses[position]
+        AlertDialog.Builder(this)
+            .setTitle("Удалить расход?")
+            .setMessage("Вы уверены, что хотите удалить '${expense.name}'?")
+            .setPositiveButton("Удалить") { _, _ ->
+                total -= expense.amount
+                expenses.removeAt(position)
+                adapter.notifyDataSetChanged()
+                updateTotal()
+                updateBudgetDisplay()
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
+    }
     private fun setupDrawer() {
-        val toggle = ActionBarDrawerToggle(
-            this,
-            drawerLayout,
-            R.string.drawer_open,
-            R.string.drawer_close
-        )
+        val toggle = ActionBarDrawerToggle(this, drawerLayout, R.string.drawer_open, R.string.drawer_close)
         drawerLayout.addDrawerListener(toggle)
         toggle.syncState()
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         navigationView.setNavigationItemSelectedListener { item ->
             when (item.itemId) {
-                R.id.nav_main -> {
-                    Toast.makeText(this, "Вы уже на главной", Toast.LENGTH_SHORT).show()
-                }
-                R.id.nav_statistics -> {
-                    openStatistics()
-                }
+                R.id.nav_main -> Toast.makeText(this, "Вы уже на главной", Toast.LENGTH_SHORT).show()
+                R.id.nav_statistics -> openStatistics()
             }
             drawerLayout.closeDrawer(GravityCompat.START)
             true
@@ -98,7 +242,6 @@ class MainActivity : AppCompatActivity() {
             val newBudget = data?.getDoubleExtra("EXTRA_NEW_BUDGET", 0.0) ?: 0.0
             budget = newBudget
             updateBudgetDisplay()
-            Toast.makeText(this, "Лимит бюджета обновлён", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -137,11 +280,6 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, getString(R.string.error_name), Toast.LENGTH_SHORT).show()
             return
         }
-        if (amountStr.isEmpty()) {
-            Toast.makeText(this, getString(R.string.error_amount), Toast.LENGTH_SHORT).show()
-            return
-        }
-
         val amount = amountStr.toDoubleOrNull()
         if (amount == null || amount <= 0) {
             Toast.makeText(this, getString(R.string.error_amount_positive), Toast.LENGTH_SHORT).show()
@@ -149,44 +287,21 @@ class MainActivity : AppCompatActivity() {
         }
 
         val checkedId = rgPayment.checkedRadioButtonId
-        val rb = findViewById<RadioButton>(checkedId)
-        val payment = rb.text.toString()
+        val payment = findViewById<RadioButton>(checkedId).text.toString()
 
         expenses.add(Expense(name, amount, payment))
         total += amount
 
         updateTotal()
-        updateList()
+        adapter.notifyDataSetChanged()
         updateBudgetDisplay()
 
         etName.setText("")
         etAmount.setText("")
-
-        Toast.makeText(
-            this,
-            getString(R.string.added_format, name, amount, payment),
-            Toast.LENGTH_LONG
-        ).show()
     }
 
     private fun updateTotal() {
         tvTotal.text = getString(R.string.total_format, total)
-    }
-
-    private fun updateList() {
-        if (expenses.isEmpty()) {
-            tvList.text = getString(R.string.list_empty)
-            return
-        }
-
-        val sb = StringBuilder()
-        for (i in expenses.indices) {
-            val e = expenses[i]
-            sb.append("${i + 1}. ${e.name} — ")
-            sb.append(String.format("%.2f", e.amount))
-            sb.append(" руб. (${e.payment})\n")
-        }
-        tvList.text = sb.toString().trim()
     }
 
     private fun clearAll() {
@@ -196,9 +311,8 @@ class MainActivity : AppCompatActivity() {
         etAmount.setText("")
         rgPayment.check(R.id.rbCash)
         updateTotal()
-        updateList()
+        adapter.notifyDataSetChanged()
         updateBudgetDisplay()
-        Toast.makeText(this, "Все данные очищены", Toast.LENGTH_SHORT).show()
     }
 
     data class Expense(val name: String, val amount: Double, val payment: String)

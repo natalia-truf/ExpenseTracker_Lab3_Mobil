@@ -12,6 +12,7 @@
         android:layout_height="match_parent">
 
         <GridLayout
+            android:id="@+id/mainGridLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:columnCount="2"
@@ -56,14 +57,12 @@
                 android:id="@+id/rgPayment"
                 android:layout_columnSpan="2"
                 android:orientation="horizontal">
-
                 <RadioButton
                     android:id="@+id/rbCash"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/rb_cash"
                     android:checked="true" />
-
                 <RadioButton
                     android:id="@+id/rbCard"
                     android:layout_width="wrap_content"
@@ -109,13 +108,21 @@
                 android:textStyle="bold"
                 android:paddingTop="16dp" />
 
-            <TextView
-                android:id="@+id/tvList"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerView"
                 android:layout_columnSpan="2"
-                android:layout_gravity="fill"
-                android:text="@string/list_empty"
-                android:textSize="14sp"
-                android:paddingTop="8dp" />
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="50dp" />
+
+            <FrameLayout
+                android:id="@+id/emptySpaceListener"
+                android:layout_columnSpan="2"
+                android:layout_width="match_parent"
+                android:layout_height="150dp"
+                android:longClickable="true"
+                android:focusable="true"
+                android:background="@android:color/transparent" />
 
         </GridLayout>
     </ScrollView>

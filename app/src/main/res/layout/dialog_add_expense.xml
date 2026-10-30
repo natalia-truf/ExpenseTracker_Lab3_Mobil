@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/etDialogName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Название" />
+
+    <EditText
+        android:id="@+id/etDialogAmount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Сумма"
+        android:inputType="numberDecimal" />
+
+    <RadioGroup
+        android:id="@+id/rgDialogPayment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingTop="8dp">
+
+        <RadioButton
+            android:id="@+id/rbDialogCash"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Наличные"
+            android:checked="true" />
+
+        <RadioButton
+            android:id="@+id/rbDialogCard"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Карта" />
+    </RadioGroup>
+</LinearLayout>
