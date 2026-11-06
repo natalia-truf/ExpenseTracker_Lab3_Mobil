@@ -20,6 +20,7 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.navigation.NavigationView
+import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 
 class MainActivity : AppCompatActivity() {
     private lateinit var etName: EditText
@@ -39,17 +40,28 @@ class MainActivity : AppCompatActivity() {
     private var selectedPosition: Int = -1
     private val expenses = mutableListOf<Expense>()
     private var total: Double = 0.0
+    private lateinit var dbHelper: DatabaseHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        PDFBoxResourceLoader.init(applicationContext)
         setContentView(R.layout.activity_main)
 
         initViews()
         setupDrawer()
+        dbHelper = DatabaseHelper(this)
         setupRecyclerView()
+        loadExpensesFromDb()
 
         btnAdd.setOnClickListener { addExpense() }
         btnClear.setOnClickListener { clearAll() }
+    }
+    private fun loadExpensesFromDb() {
+        expenses.clear()
+        expenses.addAll(dbHelper.getAllExpenses())
+        total = expenses.sumOf { it.amount }
+        updateTotal()
+        adapter.notifyDataSetChanged()
     }
 
     private fun initViews() {
@@ -119,7 +131,6 @@ class MainActivity : AppCompatActivity() {
         }
         return super.onContextItemSelected(item)
     }
-
     private fun showAddDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_add_expense, null)
         val etNameDialog = dialogView.findViewById<EditText>(R.id.etDialogName)
@@ -139,10 +150,10 @@ class MainActivity : AppCompatActivity() {
                     val rb = dialogView.findViewById<RadioButton>(checkedId)
                     val payment = rb.text.toString()
 
-                    expenses.add(Expense(name, amount, payment))
-                    total += amount
-                    updateTotal()
-                    adapter.notifyDataSetChanged()
+                    val paymentId = if (payment == "Карта") 2 else 1
+                    dbHelper.addExpense(name, amount, paymentId)
+
+                    loadExpensesFromDb()
                     updateBudgetDisplay()
                 }
                 else {
@@ -152,7 +163,6 @@ class MainActivity : AppCompatActivity() {
             .setNegativeButton("Отмена", null)
             .show()
     }
-
     private fun showEditDialog(position: Int) {
         val expense = expenses[position]
         val dialogView = layoutInflater.inflate(R.layout.dialog_add_expense, null)
@@ -181,31 +191,30 @@ class MainActivity : AppCompatActivity() {
                     val rb = dialogView.findViewById<RadioButton>(checkedId)
                     val newPayment = rb.text.toString()
 
-                    total = total - expense.amount + newAmount
-                    expenses[position] = Expense(newName, newAmount, newPayment)
-                    adapter.notifyDataSetChanged()
-                    updateTotal()
+                    val paymentId = if (newPayment == "Карта") 2 else 1
+                    dbHelper.updateExpense(expense.name, newName, newAmount, paymentId)
+
+                    loadExpensesFromDb()
                     updateBudgetDisplay()
-                }
-                else {
+                    Toast.makeText(this, "Расход обновлен", Toast.LENGTH_SHORT).show()
+                } else {
                     Toast.makeText(this, "Заполните поля корректно", Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton("Отмена", null)
             .show()
     }
-
     private fun deleteExpense(position: Int) {
         val expense = expenses[position]
         AlertDialog.Builder(this)
             .setTitle("Удалить расход?")
             .setMessage("Вы уверены, что хотите удалить '${expense.name}'?")
             .setPositiveButton("Удалить") { _, _ ->
-                total -= expense.amount
-                expenses.removeAt(position)
-                adapter.notifyDataSetChanged()
-                updateTotal()
+                dbHelper.deleteExpense(expense.name)
+
+                loadExpensesFromDb()
                 updateBudgetDisplay()
+                Toast.makeText(this, "Расход удален", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Отмена", null)
             .show()
@@ -220,6 +229,26 @@ class MainActivity : AppCompatActivity() {
             when (item.itemId) {
                 R.id.nav_main -> Toast.makeText(this, "Вы уже на главной", Toast.LENGTH_SHORT).show()
                 R.id.nav_statistics -> openStatistics()
+
+                R.id.nav_export_csv -> DataExporter.exportToCsv(this, expenses)
+                R.id.nav_export_xls -> DataExporter.exportToExcel(this, expenses)
+                R.id.nav_export_pdf -> DataExporter.exportToPdf(this, expenses)
+
+                R.id.nav_import_csv -> {
+                    dbHelper.clearExpensesTable()
+                    DataExporter.importFromCsv(this, dbHelper)
+                    loadExpensesFromDb()
+                }
+                R.id.nav_import_xls -> {
+                    dbHelper.clearExpensesTable()
+                    DataExporter.importFromExcel(this, dbHelper)
+                    loadExpensesFromDb()
+                }
+                R.id.nav_import_pdf -> {
+                    dbHelper.clearExpensesTable()
+                    DataExporter.importFromPdf(this, dbHelper)
+                    loadExpensesFromDb()
+                }
             }
             drawerLayout.closeDrawer(GravityCompat.START)
             true
@@ -289,11 +318,10 @@ class MainActivity : AppCompatActivity() {
         val checkedId = rgPayment.checkedRadioButtonId
         val payment = findViewById<RadioButton>(checkedId).text.toString()
 
-        expenses.add(Expense(name, amount, payment))
-        total += amount
+        val paymentId = if (payment == "Карта") 2 else 1
+        dbHelper.addExpense(name, amount, paymentId)
 
-        updateTotal()
-        adapter.notifyDataSetChanged()
+        loadExpensesFromDb()
         updateBudgetDisplay()
 
         etName.setText("")

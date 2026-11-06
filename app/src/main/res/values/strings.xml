@@ -24,6 +24,12 @@
     <string name="menu_statistics">Статистика</string>
     <string name="drawer_open">Открыть меню</string>
     <string name="drawer_close">Закрыть меню</string>
+    <string name="export_csv">Экспорт в CSV (S4)</string>
+    <string name="export_xls">Экспорт в XLS (S6)</string>
+    <string name="export_pdf">Экспорт в PDF (S8)</string>
+    <string name="import_csv">Импорт из CSV</string>
+    <string name="import_xls">Импорт из XLS</string>
+    <string name="import_pdf">Импорт из PDF</string>
 
     <string name="stats_title">Статистика расходов</string>
     <string name="stats_total">Общая сумма расходов:</string>

@@ -9,4 +9,16 @@
         android:id="@+id/nav_statistics"
         android:title="@string/menu_statistics" />
 
+    <group android:checkableBehavior="none">
+        <item android:id="@+id/nav_export_csv" android:title="@string/export_csv" />
+        <item android:id="@+id/nav_export_xls" android:title="@string/export_xls" />
+        <item android:id="@+id/nav_export_pdf" android:title="@string/export_pdf" />
+    </group>
+
+    <group android:checkableBehavior="none">
+        <item android:id="@+id/nav_import_csv" android:title="@string/import_csv" />
+        <item android:id="@+id/nav_import_xls" android:title="@string/import_xls" />
+        <item android:id="@+id/nav_import_pdf" android:title="@string/import_pdf" />
+    </group>
+
 </menu>
